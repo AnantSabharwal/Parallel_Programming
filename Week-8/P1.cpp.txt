@@ -1,0 +1,44 @@
+//by-ptnv-s
+#include <stdio.h>
+#include <mpi.h>
+#include <iostream>
+
+#define BUFFER_SIZE 100
+
+int main(int argc, char** argv) {
+    int rank, size;
+    char message[BUFFER_SIZE];
+    MPI_Status status;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if (rank == 0) {
+        sprintf_s(message, "Hello, World!");
+        printf("Rank %d sent message: %s\n", rank, message);
+        MPI_Ssend(message, BUFFER_SIZE, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+        MPI_Recv(message, BUFFER_SIZE, MPI_CHAR, 1, 1, MPI_COMM_WORLD, &status);
+        printf("Rank %d received message: %s\n", rank, message);
+
+    }
+    if (rank == 1){
+        MPI_Recv(message, BUFFER_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+        printf("Rank %d received message: %s\n", rank, message);
+        for (int i = 0; message[i] != '\0'; i++)
+        {
+            if (message[i] >= 'A' && message[i] <= 'Z')
+                message[i] = message[i] + 32;
+
+
+            else if (message[i] >= 'a' && message[i] <= 'z')
+                message[i] = message[i] - 32;
+
+        }
+        printf("Rank %d sent message: %s\n", rank, message);
+        MPI_Ssend(message, BUFFER_SIZE, MPI_CHAR, 0, 1, MPI_COMM_WORLD);
+    }
+
+    MPI_Finalize();
+    return 0;
+}

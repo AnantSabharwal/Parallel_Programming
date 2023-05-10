@@ -1,0 +1,34 @@
+#include <stdlib.h>
+#include <mpi.h>
+#include <stdio.h>
+
+
+int main(int argc, char** argv) {
+	int rank, size, value = 0;
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	if (rank == 0) {
+		printf("Enter an integer value: ");
+		fflush(stdout);
+		scanf_s("%d", &value);
+		MPI_Send(&value, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+		printf("Process %d sent value %d to process %d\n", rank, value, 1);
+		MPI_Recv(&value, 1, MPI_INT, size - 1, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+	}
+	else if (rank == size - 1) {
+		MPI_Recv(&value, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		value++;
+		MPI_Send(&value, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+		printf("Process %d sent value %d back to process %d\n", rank, value, 0);
+	}
+	else {
+		MPI_Recv(&value, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		value++;
+		MPI_Send(&value, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+		printf("Process %d sent value %d to process %d\n", rank, value, rank + 1);
+	}
+	MPI_Finalize();
+}
+
